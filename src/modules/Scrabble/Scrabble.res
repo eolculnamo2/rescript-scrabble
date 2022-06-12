@@ -1,7 +1,7 @@
 // https://scrabble.hasbro.com/en-us/faq#:~:text=Scrabble%20tile%20letter%20distribution%20is,of%20all%20the%20Scrabble%20tiles%3F
 module Letter = {
   exception Tile_Unscored(string)
-  type t = {score: int, value: string}
+  type t = {score: int, value: string, id: string}
   type pointsTable = {
     zero: array<string>,
     one: array<string>,
@@ -96,12 +96,12 @@ module Letter = {
         | Ok(n) => n
         | Error(err) => raise(Tile_Unscored(err))
         }
-        let tile = {
-          score: score,
-          value: letter,
-        }
-        for _ in 1 to frequency {
-          let _ = bag->Js.Array2.push(tile)
+        for j in 1 to frequency {
+          let _ = bag->Js.Array2.push({
+            score: score,
+            value: letter,
+            id: (i + j)->Belt.Int.toString ++ letter,
+          })
         }
       }
       Ok(bag->Belt.Array.shuffle)
@@ -126,6 +126,18 @@ module Letter = {
     }
     (lettersPulled, arrRef.contents)
   }
+
+  let isLetterSelected = (letter: t, selectedLetter: option<t>) => {
+    switch selectedLetter {
+    | Some(l) => l.id == letter.id
+    | None => false
+    }
+  }
+
+  let getDisplayLetter = (letter: t) => {
+    let modifiedIfBlank = letter.value === "blank" ? "" : letter.value
+    modifiedIfBlank->Js.String.toUpperCase
+  }
 }
 
 module Tile = {
@@ -149,6 +161,27 @@ module Tile = {
       }
     }
   }
+
+  let handleTileUpdate = (tiles: array<t>, placementIndex, letter: Letter.t) => {
+    let didUpdate = ref(false)
+    let updatedTiles = tiles->Belt.Array.map(existingTile => {
+      if existingTile.placementIndex != placementIndex {
+        existingTile
+      } else {
+        switch existingTile.letter {
+        | Some(_) => existingTile
+        | None => {
+            didUpdate := true
+            {
+              ...existingTile,
+              letter: Some(letter),
+            }
+          }
+        }
+      }
+    })
+    (updatedTiles, didUpdate.contents)
+  }
 }
 
 module Board = {
@@ -156,7 +189,7 @@ module Board = {
   let totalRows = 15
   let totalTiles = tilesPerRow * totalRows
 
-  let startInt = totalTiles / 2 // I think?
+  let startInt = totalTiles / 2
   let doubleWordIndexes: array<int> = [
     16,
     32,

@@ -20,3 +20,16 @@ let assignInitialLettersToPlayer = (players: array<t>, bag: array<Scrabble.Lette
   })
   (updatedPlayers, bagRef.contents)
 }
+
+let removeLetterFromMyPlayer = (players, letterId) => {
+  players->Belt.Array.map(p => {
+    if p.isMe {
+      {
+        ...p,
+        letters: p.letters->Js.Array2.filter(l => l.id != letterId),
+      }
+    } else {
+      p
+    }
+  })
+}

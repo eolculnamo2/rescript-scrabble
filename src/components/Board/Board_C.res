@@ -5,6 +5,7 @@ type state = {
   bag: array<Scrabble.Letter.t>,
   errorMsg: option<string>,
   debug: bool,
+  selectedLetter: option<Scrabble.Letter.t>,
 }
 
 let buildInitialState = () => {
@@ -51,23 +52,48 @@ let buildInitialState = () => {
       None
     },
     debug: false,
+    selectedLetter: None,
   }
 }
 
 let initialState = buildInitialState()
 
-type actions = PlaceTile
+type actions = TileClicked(Scrabble.Letter.t) | HandleTileClick(Scrabble.Tile.t)
 
 let reducer = (state, action) => {
   switch action {
-  | PlaceTile => state
+  | TileClicked(letter) => {
+      ...state,
+      selectedLetter: switch state.selectedLetter {
+      | Some(l) => l.id == letter.id ? None : Some(letter)
+      | None => Some(letter)
+      },
+    }
+  | HandleTileClick(tile) => {
+      let (updatedTiles, tileUpdated) = switch state.selectedLetter {
+      | Some(l) => state.tiles->Scrabble.Tile.handleTileUpdate(tile.placementIndex, l)
+      | None => (state.tiles, false)
+      }
+
+      {
+        ...state,
+        selectedLetter: None,
+        players: switch (state.selectedLetter, tileUpdated) {
+        | (_, false) => state.players
+        | (Some(l), true) => state.players->Player.removeLetterFromMyPlayer(l.id)
+        | (None, true) => state.players
+        },
+        tiles: updatedTiles,
+      }
+    }
   }
 }
 
 @react.component
 let make = () => {
   let (state, dispatch) = React.useReducer(reducer, initialState)
-  Js.log(state)
+
+  state.debug ? Js.log(state) : ()
 
   <div style={ReactDOM.Style.make(~display="flex", ())}>
     <Scoreboard_C players={state.players} turn={state.turn} />
@@ -87,11 +113,18 @@ let make = () => {
         )}>
         {state.tiles
         ->Belt.Array.map(tile => {
-          <Tile_C key={tile.placementIndex->Belt.Int.toString} details={tile} debug={state.debug} />
+          <Tile_C
+            handleClick={tile => dispatch(HandleTileClick(tile))}
+            key={tile.placementIndex->Belt.Int.toString}
+            details={tile}
+            debug={state.debug}
+          />
         })
         ->React.array}
       </div>
       <MyLetters_C
+        selectedLetter={state.selectedLetter}
+        handleTileClick={letter => dispatch(TileClicked(letter))}
         letters={(state.players->Js.Array2.find(player => player.isMe)->Belt.Option.getExn).letters}
       />
     </div>
