@@ -1,3 +1,5 @@
+@module("./Board_C.module.css") external styles: {..} = "default"
+
 type state = {
   players: array<Player.t>,
   turn: Player.playerId,
@@ -95,38 +97,47 @@ let make = () => {
 
   state.debug ? Js.log(state) : ()
 
-  <div style={ReactDOM.Style.make(~display="flex", ())}>
-    <Scoreboard_C players={state.players} turn={state.turn} />
-    <div>
-      {switch state.errorMsg {
-      | Some(m) => <p style={ReactDOM.Style.make(~color="red", ())}> {m->React.string} </p>
-      | None => <> </>
-      }}
-      <div
-        style={ReactDOM.Style.make(
-          ~display="grid",
-          ~gridTemplateColumns="repeat(" ++
-          Scrabble.Board.tilesPerRow->Belt.Int.toString ++
-          ", " ++
-          Scrabble.Tile.tileWidthPx ++ ")",
-          (),
-        )}>
-        {state.tiles
-        ->Belt.Array.map(tile => {
-          <Tile_C
-            handleClick={tile => dispatch(HandleTileClick(tile))}
-            key={tile.placementIndex->Belt.Int.toString}
-            details={tile}
-            debug={state.debug}
+  <div>
+    <ScorePreview_C scorePreview={state.tiles->Score.calculateScorePreview} />
+    <div style={ReactDOM.Style.make(~display="flex", ())}>
+      <Scoreboard_C players={state.players} turn={state.turn} />
+      <div>
+        {switch state.errorMsg {
+        | Some(m) => <p style={ReactDOM.Style.make(~color="red", ())}> {m->React.string} </p>
+        | None => <> </>
+        }}
+        <div
+          style={ReactDOM.Style.make(
+            ~display="grid",
+            ~gridTemplateColumns="repeat(" ++
+            Scrabble.Board.tilesPerRow->Belt.Int.toString ++
+            ", " ++
+            Scrabble.Tile.tileWidthPx ++ ")",
+            (),
+          )}>
+          {state.tiles
+          ->Belt.Array.map(tile => {
+            <Tile_C
+              handleClick={tile => dispatch(HandleTileClick(tile))}
+              key={tile.placementIndex->Belt.Int.toString}
+              details={tile}
+              debug={state.debug}
+            />
+          })
+          ->React.array}
+        </div>
+        <div style={ReactDOM.Style.make(~display="flex", ~alignItems="center", ())}>
+          <MyLetters_C
+            selectedLetter={state.selectedLetter}
+            handleTileClick={letter => dispatch(TileClicked(letter))}
+            letters={(
+              state.players->Js.Array2.find(player => player.isMe)->Belt.Option.getExn
+            ).letters}
           />
-        })
-        ->React.array}
+          <button className={styles["actionButton"]}> {"Pass"->React.string} </button>
+          <button className={styles["actionButton"]}> {"Play"->React.string} </button>
+        </div>
       </div>
-      <MyLetters_C
-        selectedLetter={state.selectedLetter}
-        handleTileClick={letter => dispatch(TileClicked(letter))}
-        letters={(state.players->Js.Array2.find(player => player.isMe)->Belt.Option.getExn).letters}
-      />
     </div>
   </div>
 }

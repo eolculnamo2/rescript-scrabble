@@ -141,8 +141,9 @@ module Letter = {
 }
 
 module Tile = {
+  type status = Blank | Preview | Committed
   type kind = Normal | StartTile | DoubleWord | TripleWord | DoubleLetter | TripleLetter
-  type t = {kind: kind, letter: option<Letter.t>, placementIndex: int}
+  type t = {kind: kind, letter: option<Letter.t>, placementIndex: int, status: status}
 
   let tileWidth = 40
   let tileWidthPx = tileWidth->Belt.Int.toString ++ "px"
@@ -175,6 +176,7 @@ module Tile = {
             {
               ...existingTile,
               letter: Some(letter),
+              status: Preview,
             }
           }
         }

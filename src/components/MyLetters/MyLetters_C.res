@@ -10,6 +10,7 @@ let make = (
       ~padding=".5rem",
       ~margin="1rem",
       ~background="brown",
+      ~width="350px",
       (),
     )}>
     {letters

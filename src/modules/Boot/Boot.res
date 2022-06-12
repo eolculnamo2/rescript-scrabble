@@ -5,6 +5,7 @@ let generateTiles = () => {
       kind: Scrabble.Board.resolveKindByIndex(i),
       letter: None,
       placementIndex: i,
+      status: Scrabble.Tile.Blank,
     }
     let _ = tiles->Js.Array2.push(newTile)
   }
