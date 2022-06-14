@@ -1,68 +1,10 @@
 @module("./Board_C.module.css") external styles: {..} = "default"
 
-type state = {
-  players: array<Player.t>,
-  turn: Player.playerId,
-  tiles: array<Scrabble.Tile.t>,
-  bag: array<Scrabble.Letter.t>,
-  errorMsg: option<string>,
-  debug: bool,
-  selectedLetter: option<Scrabble.Letter.t>,
-}
-
-let buildInitialState = () => {
-  let (bag, bagErrorMsg) = switch Scrabble.Letter.buildBag() {
-  | Ok(b) => (b, None)
-  | Error(msg) => ([], Some(msg))
-  }
-
-  // is this brittle with bag?
-  let (players, updatedBag) = [
-    {
-      name: "test 1",
-      playerId: 1,
-      score: 0,
-      place: 1,
-      isMe: true,
-      letters: [],
-    },
-    {
-      name: "test 2",
-      playerId: 2,
-      score: 0,
-      place: 1,
-      isMe: false,
-      letters: [],
-    },
-  ]->Player.assignInitialLettersToPlayer(bag)
-
-  let (playerId, playerErrorMsg) = switch players->Belt.Array.get(0) {
-  | Some(p) => (p.playerId, None)
-  | None => (-1, Some("Must have at least one player to play"))
-  }
-
-  {
-    players: players,
-    turn: playerId,
-    tiles: Boot.generateTiles(),
-    bag: updatedBag,
-    errorMsg: if bagErrorMsg->Belt.Option.isSome {
-      bagErrorMsg
-    } else if playerErrorMsg->Belt.Option.isSome {
-      playerErrorMsg
-    } else {
-      None
-    },
-    debug: false,
-    selectedLetter: None,
-  }
-}
-
-let initialState = buildInitialState()
+let initialState = BoardInit.buildInitialState()
 
 type actions = TileClicked(Scrabble.Letter.t) | HandleTileClick(Scrabble.Tile.t)
 
-let reducer = (state, action) => {
+let reducer = (state: BoardTypes.boardState, action) => {
   switch action {
   | TileClicked(letter) => {
       ...state,
