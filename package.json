@@ -17,6 +17,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "re:test": "rescript && retest tests/**/*.bs.js",
     "re:build": "rescript",
     "re:start": "rescript build -w"
   },
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "gentype": "^4.4.0",
-    "rescript": "^9.1.4"
+    "rescript": "^9.1.4",
+    "rescript-test": "^3.2.0"
   }
 }

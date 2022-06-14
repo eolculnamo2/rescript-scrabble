@@ -1,4 +1,4 @@
-%%raw(`import './index.css';`)
+%%raw(`require('./index.css');`)
 
 let rootQuery = ReactDOM.querySelector("#root")
 

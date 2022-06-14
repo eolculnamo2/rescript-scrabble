@@ -8,6 +8,6 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "**/*.bs.js": true,
+        "**/*.bs.js": false,
     }
 }
